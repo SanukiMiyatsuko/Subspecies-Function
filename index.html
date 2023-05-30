@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            亜関数計算機
+        </title>
+    </head>
+    <body>
+        <h2>
+            亜関数計算機
+        </h2>
+
+        <p>
+            亜_{a}(b)の形式で入力してください。自然数とωも使えます。
+        </p>
+        
+        <!--入力・出力 -->
+
+        <style>
+            .txt{
+                display: inline-block;
+                width: 70%;
+                padding: 0.5em;
+                border: 1px solid #999;
+                box-sizing: border-box;
+                margin: 0.5em 0;
+            }
+        </style>
+        
+        <p>
+            入力：<input class="txt" name="str" id = "str" type="text" value = "亜_{0}(亜_{0}(0))" /> 
+        </p>
+        
+        <p>
+            基本列：<input style="font-size:17px" name="num" id = "num" type="number" value = "0"/>
+        </p>
+        
+        <p>
+            <button type="button" onclick="main()"> 
+                計算する
+            </button>
+        </p>
+
+        <!-- 計算結果出力欄 -->
+
+        <div id="area"></div>
+
+        <script>
+            function main(){
+                var str = document.getElementById("str").value;
+
+                var num = document.getElementById("num").value;
+                
+                var area = document.getElementById("area");
+
+                str = formal(str);
+
+                num = formal(num);
+
+                area.innerText = reformal(fund(str, num));
+            };
+
+            function formal(str) {//自然数やωを標準形に変換する
+                if (str != 0) {
+                    var numleg = /[1-9][0-9]*/;
+                    
+                    while (numleg.test(str)) {
+                        var matchnum = str.match(numleg);
+
+                        var n0 = parseInt(matchnum);
+                        
+                        var nn = "亜_{0}(0)";
+                        
+                        for (let i = 1; i < n0; i++) {
+                            nn = nn + "+亜_{0}(0)";
+                        };
+                        
+                        str = str.replace(matchnum,nn);
+                    }
+
+                    str = str.replace(/ω/g,"亜_{0}(亜_{0}(0))")
+                }
+
+                return str;
+            };
+
+            function reformal(str) {//1やωに変換し直して見やすくする
+                if (str != 0) {
+                    str = str.replace(/亜_\{0\}\(0\)/g,"1");
+
+                    str = str.replace(/亜_\{0\}\(1\)/g,"ω");
+                }
+
+                return str;
+            };
+
+            function clsearch(str,num,btype){//対応する閉じカッコを探す(文字列,開き括弧の位置,その括弧の種類)
+                var b = str.indexOf(btype[1],num);//numより右にある閉じ括弧
+                
+                var b0 = b;
+                
+                var a = str.indexOf(btype[0],num+1);//numより右にある開き括弧
+                
+                var n = 1;
+                
+                while(n > 0.5){ //開きカッコを数える
+                    if(a < b && -0.5 < a){
+                        a = str.indexOf(btype[0],a+1);
+
+                        ++n;
+                    } else {
+                        b0 = b;
+
+                        b = str.indexOf(btype[1],b+1);
+                        
+                        --n;
+                    }
+                }
+
+                return b0;
+            };
+
+            function leftAP(str){//一番左のAPを取り出す
+                var btype0 = ["(",")"],btype1 = ["{","}"];
+                
+                var br_num = str.indexOf("{");//一番右にある"{"の位置
+                
+                var a = str;
+                if (/^0/.test(str)) {
+                    a = 0
+                } else if (-0.5 < br_num) {
+                    var cl1 = clsearch(str,br_num,btype1);//一番右にある"{"に対応した"}"の位置
+                
+                    var cl0 = clsearch(str,cl1 +1,btype0);//cl1に隣接した"("に対応した")"の位置
+                
+                    a = str.substring(0,cl0 +1);//一番左からcl0までを取り出す
+                }
+
+                return a;
+            };
+
+            function extract(str){//一番左の亜_{x}(y)に対し[x,y]を返す。存在しないなら、["null","null"]を返す。
+                var btype0 = ["(",")"],btype1 = ["{","}"];
+                
+                var x = "null",y = "null";
+                
+                var br_num = str.indexOf("{");//一番右にある"{"の位置
+                
+                if (-0.5 < br_num) {
+                    var cl1 = clsearch(str,br_num,btype1);//一番右にある"{"に対応した"}"の位置
+                    
+                    x = str.substring(br_num +1,cl1)//br_numとcl1の間を取り出す
+                    
+                    var cl0 = clsearch(str,cl1 +1,btype0);//cl1に隣接した"("に対応した")"の位置
+                    
+                    y = str.substring(cl1 +2,cl0);//cl1に隣接した"("とcl0の間を取り出す
+                }
+
+                return [x,y];
+            };
+
+            function dom(str){
+                var d = str;
+                
+                if (str == 0) {
+                    d = 0;
+                } else if (str != leftAP(str)) {
+                    d = dom(str.substring(leftAP(str).length + 1));
+                } else if (str == leftAP(str) && extract(str)[0] != "null" && extract(str)[1] != "null"){
+                    var a = extract(str)[0];
+
+                    var b = extract(str)[1];
+                    
+                    if (b == 0) {
+                        if (dom(a) == 0 || dom(a) == "亜_{0}(0)") {
+                            d = str;
+                        } else {
+                            d = "亜_{0}(亜_{0}(0))"
+                        }
+                    } else {
+                        d = "亜_{0}(亜_{0}(0))"
+                    }
+                }
+
+                return d;
+            };
+
+            function fund(str, num){
+                var f = 0;
+                
+                if (str == 0) {
+                    f = 0;
+                } else if (str != leftAP(str)) {
+                    var b0 = fund(str.substring(leftAP(str).length + 1), num);
+
+                    if (b0 == 0) {
+                        f = leftAP(str);
+                    } else {
+                        f = leftAP(str) + "+" + b0;
+                    }
+                } else if (str == leftAP(str) && extract(str)[0] != "null" && extract(str)[1] != "null") {
+                    var a = extract(str)[0];
+
+                    var b = extract(str)[1];
+
+                    if (b == 0) {
+                        if (dom(a) == 0 || dom(a) == "亜_{0}(0)") {
+                            f = num;
+                        } else if (dom(a) == "亜_{0}(亜_{0}(0))") {
+                            f = "亜_{" + fund(a, num)+ "}(" + b + ")";
+                        } else {
+                            var c = extract(dom(a))[0];
+
+                            if (dom(num) == "亜_{0}(0)") {
+                                var G = extract(fund(str, fund(num, 0)))[0];
+
+                                f = "亜_{" + fund(a, "亜_{" + fund(c, 0)+ "}(" + G + ")")+ "}(" + b + ")";
+                            } else {
+                                f = "亜_{" + fund(a, "亜_{" + fund(c, 0)+ "}(0)")+ "}(" + b + ")";
+                            }
+                        }
+                    } else if (dom(b) == "亜_{0}(0)") {
+                        if (dom(num) == "亜_{0}(0)") {
+                            f = fund(str, fund(num, 0)) + "+" + fund(str, 0);
+                        } else {
+                            f = "亜_{" + a + "}(" + fund(b, 0) + ")";
+                        }
+                    } else if (dom(b) == "亜_{0}(亜_{0}(0))") {
+                        f = "亜_{" + a + "}(" + fund(b, num) + ")";
+                    } else {
+                        var c = extract(dom(b))[1];
+                        
+                        if (dom(num) == "亜_{0}(0)") {
+                            var G = extract(fund(str, fund(num, 0)))[1];
+
+                            f = "亜_{" + a + "}(" + fund(b, "亜_{" + fund(c, 0)+ "}(" + G + ")") + ")";
+                        } else {
+                            f = "亜_{" + a + "}(" + fund(b, "亜_{" + fund(c, 0)+ "}(0)") + ")";
+                        }
+                    }
+                }
+
+                return f;
+            };
+        </Script>
+    </body>
+</html>
