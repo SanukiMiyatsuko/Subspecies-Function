@@ -28,7 +28,7 @@
         </style>
         
         <p>
-            入力：<input class="txt" name="str" id = "str" type="text" value = "亜_{0}(亜_{0}(0))" /> 
+            入力：<input class="txt" name="str" id = "str" type="text" value = "ω" /> 
         </p>
         
         <p>
@@ -228,7 +228,7 @@
                     } else if (dom(b) == "亜_{0}(亜_{0}(0))") {
                         f = "亜_{" + a + "}(" + fund(b, num) + ")";
                     } else {
-                        var c = extract(dom(b))[1];
+                        var c = extract(dom(b))[0];
                         
                         if (dom(num) == "亜_{0}(0)") {
                             var G = extract(fund(str, fund(num, 0)))[1];
